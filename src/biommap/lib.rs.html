@@ -64,6 +64,11 @@
 <span id="64">64</span>
 <span id="65">65</span>
 <span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Ar efficient bioinformatics file parser based on memory mapping of file.
 
 </span><span class="attribute">#![warn(missing_docs)]
@@ -78,8 +83,12 @@
 </span><span class="kw">pub mod </span>block;
 <span class="kw">pub mod </span>error;
 
-<span class="kw">pub mod </span>fasta;
-<span class="kw">pub mod </span>fastq;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;fasta&quot;</span>)]
+</span><span class="kw">pub mod </span>fasta;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;fastq&quot;</span>)]
+</span><span class="kw">pub mod </span>fastq;
+
+<span class="kw">pub mod </span>parser;
 
 <span class="doccomment">/// Define default blocksize
 </span><span class="kw">pub const </span>DEFAULT_BLOCKSIZE: u64 = <span class="number">65536</span>;
@@ -112,7 +121,8 @@
         file
     }
 
-    <span class="kw">pub fn </span>generate_fasta(seed: u64, nb_seq: usize, length: usize) -&gt; tempfile::NamedTempFile {
+    <span class="attribute">#[allow(dead_code)]
+    </span><span class="kw">pub fn </span>generate_fasta(seed: u64, nb_seq: usize, length: usize) -&gt; tempfile::NamedTempFile {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = rand::rngs::StdRng::seed_from_u64(seed);
 
         <span class="kw">let </span><span class="kw-2">mut </span>file = tempfile::NamedTempFile::new().unwrap();

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["sequential","Module provide a macro to run a sequential parsing of file"]]};

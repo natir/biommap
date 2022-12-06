@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["Producer","$name to produce block"],["Reader","$name is a reader struct"],["Record","Strutt that store a fastq record"]]};
