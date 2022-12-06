@@ -1,4 +1,4 @@
 var sourcesIndex = JSON.parse('{\
-"biommap":["",[],["error.rs","lib.rs"]]\
+"biommap":["",[],["block.rs","error.rs","fasta.rs","fastq.rs","lib.rs"]]\
 }');
 createSourceSidebar();

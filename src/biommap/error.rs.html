@@ -10,6 +10,42 @@
 <span id="10">10</span>
 <span id="11">11</span>
 <span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Error struct of project biommap
 
 </span><span class="comment">/* crate use */
@@ -18,7 +54,43 @@
 <span class="doccomment">/// Enum to manage error
 </span><span class="attribute">#[derive(std::fmt::Debug, thiserror::Error)]
 </span><span class="kw">pub enum </span>Error {
-    }
+    <span class="doccomment">/// Missing metadata file
+    </span><span class="attribute">#[error(<span class="string">&quot;biommap failled to read file metadata {source}&quot;</span>)]
+    </span>MetaDataFile {
+        <span class="doccomment">/// Original error
+        </span>source: std::io::Error,
+    },
+
+    <span class="doccomment">/// Can&#39;t open file
+    </span><span class="attribute">#[error(<span class="string">&quot;biommap can&#39;t open file {source}&quot;</span>)]
+    </span>OpenFile {
+        <span class="doccomment">/// Original error
+        </span>source: std::io::Error,
+    },
+
+    <span class="doccomment">/// Can&#39;t map file in memory
+    </span><span class="attribute">#[error(<span class="string">&quot;biommap can&#39;t map file on memory {source}&quot;</span>)]
+    </span>MapFile {
+        <span class="doccomment">/// Original error
+        </span>source: std::io::Error,
+    },
+
+    <span class="doccomment">/// biommap didn&#39;t find a new line in block, extend block size could by a solution
+    </span><span class="attribute">#[error(<span class="string">&quot;biommap didn&#39;t find new line in block increase block size&quot;</span>)]
+    </span>NoNewLineInBlock,
+
+    <span class="doccomment">/// File seems not containts fastq data
+    </span><span class="attribute">#[error(<span class="string">&quot;Input file seems not be a fastq file&quot;</span>)]
+    </span>NotAFastqFile,
+
+    <span class="doccomment">/// File seems not containts fasta data
+    </span><span class="attribute">#[error(<span class="string">&quot;Input file seems not be a fasta file&quot;</span>)]
+    </span>NotAFastaFile,
+
+    <span class="doccomment">/// Current record seems to be a partial record
+    </span><span class="attribute">#[error(<span class="string">&quot;biommap found a partial record&quot;</span>)]
+    </span>PartialRecord,
+}
 
 <span class="doccomment">/// Alias of result
 </span><span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = core::result::Result&lt;T, Error&gt;;

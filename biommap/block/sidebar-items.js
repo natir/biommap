@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["Block","Block reperesent a section of file memory mapped in file"]]};
