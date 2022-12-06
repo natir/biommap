@@ -1,0 +1,18 @@
+_commit: 1.6.1
+_src_path: gh:natir/copier-rust
+author_email: pierre@marijon.fr
+author_name: Pierre Marijon
+ci: github
+cli: false
+copyright_date: '2023'
+copyright_holder: Pierre Marijon
+copyright_holder_email: pierre@marijon.fr
+copyright_license: MIT
+forge_host: github.com
+forge_host_custom: null
+forge_namespace: natir
+forge_repo_name: biommap
+msrv: '1.65'
+project_description: Ar efficient bioinformatics file parser based on memory mapping
+    of file.
+project_name: biommap
