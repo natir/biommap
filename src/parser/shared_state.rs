@@ -1,8 +1,11 @@
-//! Struct that extract part of file (called block), each block is read in parallel
+//! Provide a macro to run parallel parsing of file
+//!
+//! Also contains macro to easily build fasta and fastq parser
 
+/// Macro to generate a sharedstate parser
 #[macro_export(local_inner_macros)]
 macro_rules! impl_sharedstate {
-    ($name:ident, $producer:expr, $reader:expr, $data_type:ty, $record:expr) => {
+    ($name:ident, $producer:expr, $reader:expr, $data_type:ty, $record:expr,) => {
         pub struct $name {}
 
         impl $name {
@@ -47,6 +50,8 @@ macro_rules! impl_sharedstate {
     };
 }
 
+#[cfg(feature = "fasta")]
+/// Macro to generate a sharedstate fasta parser
 #[macro_export(local_inner_macros)]
 macro_rules! fasta_sharedstate {
     ($name:ident, $data_type:ty, $record:expr) => {
@@ -55,11 +60,13 @@ macro_rules! fasta_sharedstate {
             $crate::fasta::Producer::with_blocksize,
             $crate::fasta::Reader::new,
             $data_type,
-            $record
+            $record,
         );
     };
 }
 
+#[cfg(feature = "fastq")]
+/// Macro to generate a sharedstate fastq parser
 #[macro_export(local_inner_macros)]
 macro_rules! fastq_sharedstate {
     ($name:ident, $data_type:ty, $record:expr) => {
@@ -68,7 +75,7 @@ macro_rules! fastq_sharedstate {
             $crate::fastq::Producer::with_blocksize,
             $crate::fastq::Reader::new,
             $data_type,
-            $record
+            $record,
         );
     };
 }
@@ -80,14 +87,18 @@ mod tests {
     use rayon::iter::ParallelIterator;
 
     /* project use */
-    use crate::block;
+    #[cfg(feature = "fasta")]
+    use crate::fasta;
+    #[cfg(feature = "fastq")]
+    use crate::fastq;
 
+    #[cfg(feature = "fasta")]
     #[test]
     fn record_count_fasta() {
         fasta_sharedstate!(
             FastaRecordCount,
             std::sync::atomic::AtomicU64,
-            |_record: block::Record, counter: &std::sync::atomic::AtomicU64| {
+            |_record: fasta::Record, counter: &std::sync::atomic::AtomicU64| {
                 counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             }
         );
@@ -103,12 +114,13 @@ mod tests {
         assert_eq!(1000, counter.into_inner());
     }
 
+    #[cfg(feature = "fasta")]
     #[test]
     fn base_count_fasta() {
         fasta_sharedstate!(
             FastaRecordCount,
             [std::sync::atomic::AtomicU64; 4],
-            |record: block::Record, counter: &[std::sync::atomic::AtomicU64; 4]| {
+            |record: fasta::Record, counter: &[std::sync::atomic::AtomicU64; 4]| {
                 for nuc in record.sequence {
                     counter[(nuc >> 1 & 0b11) as usize]
                         .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
@@ -134,12 +146,13 @@ mod tests {
         });
     }
 
+    #[cfg(feature = "fastq")]
     #[test]
     fn record_count_fastq() {
         fastq_sharedstate!(
             FastqRecordCount,
             std::sync::atomic::AtomicU64,
-            |_record: block::Record, counter: &std::sync::atomic::AtomicU64| {
+            |_record: fastq::Record, counter: &std::sync::atomic::AtomicU64| {
                 counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             }
         );
@@ -155,12 +168,13 @@ mod tests {
         assert_eq!(1000, counter.into_inner());
     }
 
+    #[cfg(feature = "fastq")]
     #[test]
     fn base_count_fastq() {
         fastq_sharedstate!(
             FastqRecordCount,
             [std::sync::atomic::AtomicU64; 4],
-            |record: block::Record, counter: &[std::sync::atomic::AtomicU64; 4]| {
+            |record: fastq::Record, counter: &[std::sync::atomic::AtomicU64; 4]| {
                 for nuc in record.sequence {
                     counter[(nuc >> 1 & 0b11) as usize]
                         .fetch_add(1, std::sync::atomic::Ordering::SeqCst);

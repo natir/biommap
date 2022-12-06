@@ -12,8 +12,12 @@
 pub mod block;
 pub mod error;
 
+#[cfg(feature = "fasta")]
 pub mod fasta;
+#[cfg(feature = "fastq")]
 pub mod fastq;
+
+pub mod parser;
 
 /// Define default blocksize
 pub const DEFAULT_BLOCKSIZE: u64 = 65536;
@@ -46,6 +50,7 @@ mod tests {
         file
     }
 
+    #[allow(dead_code)]
     pub fn generate_fasta(seed: u64, nb_seq: usize, length: usize) -> tempfile::NamedTempFile {
         let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
 

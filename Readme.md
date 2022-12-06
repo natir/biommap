@@ -8,20 +8,22 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/natir/biommap/blob/master/LICENSE)
 
 
-Ar efficient bioinformatics file parser based on memory mapping of file.
+An efficient bioinformatics file parser based on memory mapping of file.
 
-## Installation
-
-### From source
-
-```bash
-git clone https://github.com/natir/biommap.git
-cd biommap
-cargo install --path .
-```
+**WARNING**:
+- biommap work only on uncompressed seekable file
+- biommap is tested only on Linux
+- biommap is still in developpement many thing can change or be break
 
 ## Usage
 
+### From source
+
+In your `Cargo.toml` put
+```toml
+biommap = { git = "https://github.com/natir/biommap/", branch = "main" }
+```
+
 ## Minimum supported Rust version
 
-Currently the minimum supported Rust version is 1.65.
+Currently the minimum supported Rust version is 1.56.

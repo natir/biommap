@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Pierre Marijon <pierre@marijon.fr>"]
 edition = "2021"
 description = "Ar efficient bioinformatics file parser based on memory mapping of file."
-rust-version = "1.65"
+rust-version = "1.56"
 
 homepage = "https://github.com/natir/biommap"
 repository = "https://github.com/natir/biommap"
@@ -14,10 +14,19 @@ readme = "Readme.md"
 license-file = "LICENSE"
 
 
+[features]
+default = []
+fasta = []
+fastq = []
+shared_state = ["rayon"]
+
 [dependencies]
 memmap2        = { version = "0.5" }
 bstr           = { version = "1" }
 memchr         = { version = "2" }
+
+# Parallel management
+rayon          = { version = "1", optional = true }
 
 # Error management
 thiserror      = { version = "1" }

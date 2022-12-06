@@ -1,6 +1,11 @@
+//! Module provide a macro to run a sequential parsing of file
+//!
+//! Also contains macro to easily build fasta and fastq parser
+
+/// Macro to generate a sequential parser
 #[macro_export(local_inner_macros)]
 macro_rules! impl_sequential {
-    ($name:ident, $producer:expr, $reader:expr,  $data_type:ty, $record:expr) => {
+    ($name:ident, $producer:expr, $reader:expr,  $data_type:ty, $record:expr, $record_type:ty,) => {
         pub struct $name {}
 
         impl $name {
@@ -47,13 +52,15 @@ macro_rules! impl_sequential {
                 Ok(())
             }
 
-            fn record(&self, record: $crate::block::Record, data: &mut $data_type) -> () {
+            fn record(&self, record: $record_type, data: &mut $data_type) -> () {
                 $record(record, data);
             }
         }
     };
 }
 
+#[cfg(feature = "fasta")]
+/// Macro to generate a fasta sequential parser
 #[macro_export(local_inner_macros)]
 macro_rules! fasta_sequential {
     ($name:ident, $data_type:ty, $record:expr) => {
@@ -62,11 +69,14 @@ macro_rules! fasta_sequential {
             $crate::fasta::Producer::with_blocksize,
             $crate::fasta::Reader::new,
             $data_type,
-            $record
+            $record,
+            $crate::fasta::Record,
         );
     };
 }
 
+/// Macro to generate a fasta sequential parser/// Macro to generate a fasta sequential parser
+#[cfg(feature = "fastq")]
 #[macro_export(local_inner_macros)]
 macro_rules! fastq_sequential {
     ($name:ident, $data_type:ty, $record:expr) => {
@@ -75,17 +85,20 @@ macro_rules! fastq_sequential {
             $crate::fastq::Producer::with_blocksize,
             $crate::fastq::Reader::new,
             $data_type,
-            $record
+            $record,
+            $crate::fastq::Record,
         );
     };
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::block;
+    #[cfg(feature = "fasta")]
     use crate::fasta;
+    #[cfg(feature = "fastq")]
     use crate::fastq;
 
+    #[cfg(feature = "fasta")]
     #[test]
     fn record_count_fasta() {
         impl_sequential!(
@@ -93,9 +106,10 @@ mod tests {
             fasta::Producer::with_blocksize,
             fasta::Reader::new,
             u64,
-            |_record: block::Record, counter: &mut u64| {
+            |_record: fasta::Record, counter: &mut u64| {
                 *counter += 1;
-            }
+            },
+            fasta::Record,
         );
 
         let mut counter = 0;
@@ -109,6 +123,7 @@ mod tests {
         assert_eq!(1_000, counter);
     }
 
+    #[cfg(feature = "fasta")]
     #[test]
     fn base_count_fasta() {
         impl_sequential!(
@@ -116,11 +131,12 @@ mod tests {
             fasta::Producer::with_blocksize,
             fasta::Reader::new,
             [u64; 4],
-            |record: block::Record, bases: &mut [u64; 4]| {
+            |record: fasta::Record, bases: &mut [u64; 4]| {
                 for nuc in record.sequence {
                     bases[(nuc >> 1 & 0b11) as usize] += 1;
                 }
-            }
+            },
+            fasta::Record,
         );
 
         let mut bases = [0; 4];
@@ -134,6 +150,7 @@ mod tests {
         assert_eq!([37378, 37548, 37548, 37526], bases);
     }
 
+    #[cfg(feature = "fastq")]
     #[test]
     fn record_count_fastq() {
         impl_sequential!(
@@ -141,9 +158,10 @@ mod tests {
             fastq::Producer::with_blocksize,
             fastq::Reader::new,
             u64,
-            |_record: block::Record, counter: &mut u64| {
+            |_record: fastq::Record, counter: &mut u64| {
                 *counter += 1;
-            }
+            },
+            fastq::Record,
         );
 
         let mut counter = 0;
@@ -157,6 +175,7 @@ mod tests {
         assert_eq!(1_000, counter);
     }
 
+    #[cfg(feature = "fastq")]
     #[test]
     fn base_count_fastq() {
         impl_sequential!(
@@ -164,11 +183,12 @@ mod tests {
             fastq::Producer::with_blocksize,
             fastq::Reader::new,
             [u64; 4],
-            |record: block::Record, bases: &mut [u64; 4]| {
+            |record: fastq::Record, bases: &mut [u64; 4]| {
                 for nuc in record.sequence {
                     bases[(nuc >> 1 & 0b11) as usize] += 1;
                 }
-            }
+            },
+            fastq::Record,
         );
 
         let mut bases = [0; 4];
