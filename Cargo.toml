@@ -15,22 +15,31 @@ license-file = "LICENSE"
 
 
 [dependencies]
-
+memmap2        = { version = "0.5" }
+bstr           = { version = "1" }
+memchr         = { version = "2" }
 
 # Error management
 thiserror      = { version = "1" }
 
-
 # Logging and error management
 log            = { version = "0.4" }
+
 [dev-dependencies]
+# Benchmarking
 criterion      = { version = "0.3" }
+
+# Test
+rand           = { version = "0.8" }
+tempfile       = { version = "3" }
 
 # CLI management
 clap           = { version = "3", features = ["derive"] }
 
 # Logging management
 stderrlog      = { version = "0.4" }
+
+
 [profile.release]
 lto = 'thin'
 opt-level = 3
