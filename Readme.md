@@ -26,4 +26,4 @@ biommap = { git = "https://github.com/natir/biommap/", branch = "main" }
 
 ## Minimum supported Rust version
 
-Currently the minimum supported Rust version is 1.57.
+Currently the minimum supported Rust version is 1.60.
