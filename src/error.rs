@@ -39,6 +39,10 @@ pub enum Error {
     #[error("Input file seems not be a fasta file")]
     NotAFastaFile,
 
+    /// File seems not containts vcf data
+    #[error("Input file seems not be a vcf file")]
+    NotAVcfFile,
+
     /// Current record seems to be a partial record
     #[error("biommap found a partial record")]
     PartialRecord,

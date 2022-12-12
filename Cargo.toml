@@ -15,15 +15,24 @@ license-file = "LICENSE"
 
 
 [features]
-default = []
-fasta = []
-fastq = []
+default      = []
+fasta        = ["bstr", "memchr"]
+fastq        = ["bstr", "memchr"]
+vcf          = ["bstr", "memchr"]
 shared_state = ["rayon"]
+macro        = ["syn", "quote"]
+
 
 [dependencies]
 memmap2        = { version = "0.5" }
-bstr           = { version = "1" }
-memchr         = { version = "2" }
+
+# String manipulation
+bstr           = { version = "1", optional = true }
+memchr         = { version = "2", optional = true }
+
+# Proc macro
+syn            = { version = "1", optional = true }
+quote          = { version = "1", optional = true }
 
 # Parallel management
 rayon          = { version = "1", optional = true }

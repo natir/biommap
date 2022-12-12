@@ -219,7 +219,7 @@ macro_rules! impl_reader {
         impl<$lt> $name {
 	    /// Create a new $name
             pub fn new(block: block::Block) -> Self {
-                Reader { offset: 0, block }
+                Self { offset: 0, block }
             }
 
 	    /// Get the next available record

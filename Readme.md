@@ -24,6 +24,14 @@ In your `Cargo.toml` put
 biommap = { git = "https://github.com/natir/biommap/", branch = "main" }
 ```
 
+### Features
+
+- fasta: Include fasta parser
+- fastq: Include fastq parser
+- vcf: Include vcf parser
+- shared_state: Add shared\_state parser and `rayon` crates
+- macro: WIP
+
 ## Minimum supported Rust version
 
 Currently the minimum supported Rust version is 1.60.
