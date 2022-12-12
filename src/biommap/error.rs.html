@@ -46,6 +46,10 @@
 <span id="46">46</span>
 <span id="47">47</span>
 <span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Error struct of project biommap
 
 </span><span class="comment">/* crate use */
@@ -86,6 +90,10 @@
     <span class="doccomment">/// File seems not containts fasta data
     </span><span class="attribute">#[error(<span class="string">&quot;Input file seems not be a fasta file&quot;</span>)]
     </span>NotAFastaFile,
+
+    <span class="doccomment">/// File seems not containts vcf data
+    </span><span class="attribute">#[error(<span class="string">&quot;Input file seems not be a vcf file&quot;</span>)]
+    </span>NotAVcfFile,
 
     <span class="doccomment">/// Current record seems to be a partial record
     </span><span class="attribute">#[error(<span class="string">&quot;biommap found a partial record&quot;</span>)]
