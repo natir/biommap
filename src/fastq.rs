@@ -131,6 +131,29 @@ TTAGATTATAGTACGGTATAGTGGTTACTATGTAGCCTAAGTGGCGCCCGTTGTAGAGGAATCCACTTATATAACACAGG
         }
 
         #[test]
+        fn with_blocksize_offset() {
+            let mut tmp = Producer::with_blocksize_offset(
+                463,
+                308,
+                crate::tests::generate_fastq(42, 1_000, 150),
+            )
+            .unwrap();
+
+            let block = tmp.next_block().unwrap().unwrap();
+
+            assert_eq!(block.len(), 308);
+
+            assert_eq!(
+                String::from_utf8(block.data().to_vec()).unwrap(),
+                "@1
+AGTTATCGTGTACCTCCTAGCTTTTAGTTGTGCTTTAACAGTGTAACATTGGGACGCTATTACTCGCCGGTGAGGCGGTCTTCCTTGACTATACCGATCGTGGAGTTCATGCGCGCGGATCCCTCAGCGTTCTCGGGAAGCGCGAACAGA
++1
+iCW?:KL~15\\E|MNRKY)S$?~~Ub}d)dY2LX:e@b^'<<$$e56W0fdV,<Y>Yd(J<5p6xt)z+OxuPXv?/_yH8z^%Sks1*nxm$<7*YdkvNPf:>YW=$uxZ)}[v/DlZm&EW(s(cMelx\"iEV3Hp]cz3%_T@\\Ms
+".to_string()
+            );
+        }
+
+        #[test]
         fn with_blocksize_buffer_larger_file() {
             let mut tmp =
                 Producer::with_blocksize(8092, crate::tests::generate_fastq(44, 2, 150)).unwrap();

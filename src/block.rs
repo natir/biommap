@@ -74,6 +74,38 @@ macro_rules! impl_producer {
                 })
             }
 
+            /// Create a new Block producer with offset choose by user
+            pub fn with_offset<P>(offset: u64, path: P) -> error::Result<Self>
+            where
+                P: AsRef<std::path::Path>,
+            {
+                Ok(Self {
+                    offset: offset,
+                    blocksize: Self::fix_blocksize::<P>(&path, $crate::DEFAULT_BLOCKSIZE)?,
+                    file_length: Self::filesize::<P>(&path)?,
+                    file: std::fs::File::open(path)
+                        .map_err(|source| error::Error::OpenFile { source })?,
+                })
+            }
+
+            /// Create a new Block producer with offset choose by user
+            pub fn with_blocksize_offset<P>(
+                blocksize: u64,
+                offset: u64,
+                path: P,
+            ) -> error::Result<Self>
+            where
+                P: AsRef<std::path::Path>,
+            {
+                Ok(Self {
+                    offset: offset,
+                    blocksize: Self::fix_blocksize::<P>(&path, blocksize)?,
+                    file_length: Self::filesize::<P>(&path)?,
+                    file: std::fs::File::open(path)
+                        .map_err(|source| error::Error::OpenFile { source })?,
+                })
+            }
+
             /// Get next block
             pub fn next_block(&mut self) -> error::Result<Option<block::Block>> {
                 if self.offset() == self.file_length() {
