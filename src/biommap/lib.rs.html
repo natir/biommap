@@ -71,6 +71,25 @@
 <span id="71">71</span>
 <span id="72">72</span>
 <span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Ar efficient bioinformatics file parser based on memory mapping of file.
 
 </span><span class="attribute">#![warn(missing_docs)]
@@ -99,11 +118,19 @@
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span>rand::Rng;
+    <span class="comment">/* crate use */
+    </span><span class="kw">use </span>rand::Rng;
     <span class="kw">use </span>rand::SeedableRng;
     <span class="kw">use </span>std::io::Write;
 
-    <span class="kw">pub fn </span>generate_fastq(seed: u64, nb_seq: usize, length: usize) -&gt; tempfile::NamedTempFile {
+    <span class="comment">/* project use */
+    </span><span class="kw">use </span><span class="kw">crate</span>::error;
+
+    <span class="kw">pub fn </span>generate_fastq(
+        seed: u64,
+        nb_seq: usize,
+        length: usize,
+    ) -&gt; error::Result&lt;tempfile::NamedTempFile&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = rand::rngs::StdRng::seed_from_u64(seed);
 
         <span class="kw">let </span><span class="kw-2">mut </span>file = tempfile::NamedTempFile::new().unwrap();
@@ -122,14 +149,17 @@
             <span class="macro">writeln!</span>(file, <span class="string">&quot;@{}\n{}\n+{}\n{}&quot;</span>, i, dna_seq, i, qual_seq).unwrap();
         }
 
-        file
+        <span class="prelude-val">Ok</span>(file)
     }
 
-    <span class="attribute">#[allow(dead_code)]
-    </span><span class="kw">pub fn </span>generate_fasta(seed: u64, nb_seq: usize, length: usize) -&gt; tempfile::NamedTempFile {
+    <span class="kw">pub fn </span>generate_fasta(
+        seed: u64,
+        nb_seq: usize,
+        length: usize,
+    ) -&gt; error::Result&lt;tempfile::NamedTempFile&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = rand::rngs::StdRng::seed_from_u64(seed);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>file = tempfile::NamedTempFile::new().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>file = tempfile::NamedTempFile::new()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>dna = [<span class="string">b&#39;A&#39;</span>, <span class="string">b&#39;C&#39;</span>, <span class="string">b&#39;T&#39;</span>, <span class="string">b&#39;G&#39;</span>];
 
@@ -138,10 +168,18 @@
                 .map(|<span class="kw">_</span>| dna[rng.gen_range(<span class="number">0</span>..<span class="number">4</span>)] <span class="kw">as </span>char)
                 .collect::&lt;String&gt;();
 
-            <span class="macro">writeln!</span>(file, <span class="string">&quot;&gt;{}\n{}&quot;</span>, i, dna_seq).unwrap();
+            <span class="macro">writeln!</span>(file, <span class="string">&quot;&gt;{}\n{}&quot;</span>, i, dna_seq)<span class="question-mark">?</span>;
         }
 
-        file
+        <span class="prelude-val">Ok</span>(file)
+    }
+
+    <span class="kw">pub fn </span>write_in_tempfile(data: <span class="kw-2">&amp;</span>[u8]) -&gt; error::Result&lt;tempfile::NamedTempFile&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>tempfile = tempfile::NamedTempFile::new()<span class="question-mark">?</span>;
+
+        tempfile.write_all(data)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(tempfile)
     }
 }
 </code></pre></div>

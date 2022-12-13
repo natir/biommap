@@ -281,6 +281,10 @@
 <span id="281">281</span>
 <span id="282">282</span>
 <span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Struct that extract part of file (called block) and read it as fastx file.
 
 </span><span class="comment">/* std use */
@@ -530,9 +534,11 @@
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
+    <span class="kw">use </span><span class="kw">crate</span>::error;
+
     <span class="attribute">#[test]
-    </span><span class="kw">fn </span>block() {
-        <span class="kw">let </span>file = <span class="kw">crate</span>::tests::generate_fastq(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">50</span>);
+    </span><span class="kw">fn </span>block() -&gt; error::Result&lt;()&gt; {
+        <span class="kw">let </span>file = <span class="kw">crate</span>::tests::generate_fastq(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">50</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>data = <span class="kw">unsafe </span>{
             memmap2::MmapOptions::new()
@@ -562,6 +568,8 @@
 
         <span class="macro">assert_eq!</span>(block.len(), <span class="number">200</span>);
         <span class="macro">assert!</span>(!block.is_empty());
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>

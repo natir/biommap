@@ -50,6 +50,34 @@
 <span id="50">50</span>
 <span id="51">51</span>
 <span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Error struct of project biommap
 
 </span><span class="comment">/* crate use */
@@ -79,6 +107,10 @@
         </span>source: std::io::Error,
     },
 
+    <span class="doccomment">/// Generic io::Error
+    </span><span class="attribute">#[error(transparent)]
+    </span>IO(<span class="attribute">#[from] </span>std::io::Error),
+
     <span class="doccomment">/// biommap didn&#39;t find a new line in block, extend block size could by a solution
     </span><span class="attribute">#[error(<span class="string">&quot;biommap didn&#39;t find new line in block increase block size&quot;</span>)]
     </span>NoNewLineInBlock,
@@ -95,9 +127,33 @@
     </span><span class="attribute">#[error(<span class="string">&quot;Input file seems not be a vcf file&quot;</span>)]
     </span>NotAVcfFile,
 
+    <span class="doccomment">/// Vcf error
+    </span><span class="attribute">#[error(transparent)]
+    </span>VcfError(<span class="attribute">#[from] </span>VcfError),
+
     <span class="doccomment">/// Current record seems to be a partial record
     </span><span class="attribute">#[error(<span class="string">&quot;biommap found a partial record&quot;</span>)]
     </span>PartialRecord,
+}
+
+<span class="doccomment">/// Enum to manage vcf error
+</span><span class="attribute">#[derive(std::fmt::Debug, thiserror::Error)]
+</span><span class="kw">pub enum </span>VcfError {
+    <span class="doccomment">/// Blocksize of header reader isn&#39;t larger than header increased it
+    </span><span class="attribute">#[error(<span class="string">&quot;Blocksize of header reader isn&#39;t larger than header increased it&quot;</span>)]
+    </span>HeaderBlockTooShort,
+
+    <span class="doccomment">/// Header Vcf Info header not complete
+    </span><span class="attribute">#[error(<span class="string">&quot;A header info record not containt ID, Number, Type and Description&quot;</span>)]
+    </span>HeaderInfoPartial,
+
+    <span class="doccomment">/// Header Vcf Filter header not complete
+    </span><span class="attribute">#[error(<span class="string">&quot;A header filter record not containt ID, Number, Type and Description&quot;</span>)]
+    </span>HeaderFilterPartial,
+
+    <span class="doccomment">/// Header Vcf Format header not complete
+    </span><span class="attribute">#[error(<span class="string">&quot;A header format record not containt ID, Number, Type and Description&quot;</span>)]
+    </span>HeaderFormatPartial,
 }
 
 <span class="doccomment">/// Alias of result

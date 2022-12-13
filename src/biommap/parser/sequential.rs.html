@@ -202,6 +202,9 @@
 <span id="202">202</span>
 <span id="203">203</span>
 <span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module provide a macro to run a sequential parsing of file
 //!
 //! Also contains macro to easily build fasta and fastq parser
@@ -297,6 +300,7 @@
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
+
     <span class="attribute">#[cfg(feature = <span class="string">&quot;fasta&quot;</span>)]
     </span><span class="kw">use </span><span class="kw">crate</span>::fasta;
     <span class="attribute">#[cfg(feature = <span class="string">&quot;fastq&quot;</span>)]
@@ -304,7 +308,7 @@
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;fasta&quot;</span>)]
     #[test]
-    </span><span class="kw">fn </span>record_count_fasta() {
+    </span><span class="kw">fn </span>record_count_fasta() -&gt; error::Result&lt;()&gt; {
         <span class="macro">impl_sequential!</span>(
             FastaRecordCount,
             fasta::Producer::with_blocksize,
@@ -320,16 +324,16 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>parser = FastaRecordCount::new();
 
-        parser
-            .parse(<span class="kw">crate</span>::tests::generate_fasta(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">150</span>), <span class="kw-2">&amp;mut </span>counter)
-            .unwrap();
+        parser.parse(<span class="kw">crate</span>::tests::generate_fasta(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">150</span>)<span class="question-mark">?</span>, <span class="kw-2">&amp;mut </span>counter)<span class="question-mark">?</span>;
 
         <span class="macro">assert_eq!</span>(<span class="number">1_000</span>, counter);
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;fasta&quot;</span>)]
     #[test]
-    </span><span class="kw">fn </span>base_count_fasta() {
+    </span><span class="kw">fn </span>base_count_fasta() -&gt; error::Result&lt;()&gt; {
         <span class="macro">impl_sequential!</span>(
             FastaNucCount,
             fasta::Producer::with_blocksize,
@@ -347,16 +351,16 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>parser = FastaNucCount::new();
 
-        parser
-            .parse(<span class="kw">crate</span>::tests::generate_fasta(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">150</span>), <span class="kw-2">&amp;mut </span>bases)
-            .unwrap();
+        parser.parse(<span class="kw">crate</span>::tests::generate_fasta(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">150</span>)<span class="question-mark">?</span>, <span class="kw-2">&amp;mut </span>bases)<span class="question-mark">?</span>;
 
         <span class="macro">assert_eq!</span>([<span class="number">37378</span>, <span class="number">37548</span>, <span class="number">37548</span>, <span class="number">37526</span>], bases);
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;fastq&quot;</span>)]
     #[test]
-    </span><span class="kw">fn </span>record_count_fastq() {
+    </span><span class="kw">fn </span>record_count_fastq() -&gt; error::Result&lt;()&gt; {
         <span class="macro">impl_sequential!</span>(
             FastqRecordCount,
             fastq::Producer::with_blocksize,
@@ -373,15 +377,17 @@
         <span class="kw">let </span><span class="kw-2">mut </span>parser = FastqRecordCount::new();
 
         parser
-            .parse(<span class="kw">crate</span>::tests::generate_fastq(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">150</span>), <span class="kw-2">&amp;mut </span>counter)
+            .parse(<span class="kw">crate</span>::tests::generate_fastq(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">150</span>)<span class="question-mark">?</span>, <span class="kw-2">&amp;mut </span>counter)
             .unwrap();
 
         <span class="macro">assert_eq!</span>(<span class="number">1_000</span>, counter);
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attribute">#[cfg(feature = <span class="string">&quot;fastq&quot;</span>)]
     #[test]
-    </span><span class="kw">fn </span>base_count_fastq() {
+    </span><span class="kw">fn </span>base_count_fastq() -&gt; error::Result&lt;()&gt; {
         <span class="macro">impl_sequential!</span>(
             FastqNucCount,
             fastq::Producer::with_blocksize,
@@ -399,11 +405,11 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>parser = FastqNucCount::new();
 
-        parser
-            .parse(<span class="kw">crate</span>::tests::generate_fastq(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">150</span>), <span class="kw-2">&amp;mut </span>bases)
-            .unwrap();
+        parser.parse(<span class="kw">crate</span>::tests::generate_fastq(<span class="number">42</span>, <span class="number">1_000</span>, <span class="number">150</span>)<span class="question-mark">?</span>, <span class="kw-2">&amp;mut </span>bases)<span class="question-mark">?</span>;
 
         <span class="macro">assert_eq!</span>([<span class="number">37301</span>, <span class="number">37496</span>, <span class="number">37624</span>, <span class="number">37579</span>], bases);
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>

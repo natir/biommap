@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"biommap":[["impl Freeze for <a class=\"struct\" href=\"biommap/block/struct.Block.html\" title=\"struct biommap::block::Block\">Block</a>",1,["biommap::block::Block"]],["impl Freeze for <a class=\"enum\" href=\"biommap/error/enum.Error.html\" title=\"enum biommap::error::Error\">Error</a>",1,["biommap::error::Error"]]]
+"biommap":[["impl Freeze for <a class=\"struct\" href=\"biommap/block/struct.Block.html\" title=\"struct biommap::block::Block\">Block</a>",1,["biommap::block::Block"]],["impl Freeze for <a class=\"enum\" href=\"biommap/error/enum.Error.html\" title=\"enum biommap::error::Error\">Error</a>",1,["biommap::error::Error"]],["impl Freeze for <a class=\"enum\" href=\"biommap/error/enum.VcfError.html\" title=\"enum biommap::error::VcfError\">VcfError</a>",1,["biommap::error::VcfError"]]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

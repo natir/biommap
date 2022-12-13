@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Error","Enum to manage error"]],"type":[["Result","Alias of result"]]};
+window.SIDEBAR_ITEMS = {"enum":[["Error","Enum to manage error"],["VcfError","Enum to manage vcf error"]],"type":[["Result","Alias of result"]]};
