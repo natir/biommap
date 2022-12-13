@@ -67,23 +67,25 @@ mod tests {
         use std::io::Write;
 
         #[test]
-        fn new() {
-            let mut tmp = Producer::new(crate::tests::generate_fasta(42, 100, 150)).unwrap();
+        fn new() -> error::Result<()> {
+            let mut tmp = Producer::new(crate::tests::generate_fasta(42, 100, 150)?)?;
 
-            let block = tmp.next_block().unwrap().unwrap();
+            let block = tmp.next_block()?.unwrap();
 
             assert_eq!(block.len(), 15490);
 
-            assert!(tmp.next_block().unwrap().is_none());
+            assert!(tmp.next_block()?.is_none());
+
+            Ok(())
         }
 
         #[test]
-        fn with_blocksize() {
+        fn with_blocksize() -> error::Result<()> {
             let mut tmp =
-                Producer::with_blocksize(463, crate::tests::generate_fasta(42, 1_000, 150))
+                Producer::with_blocksize(463, crate::tests::generate_fasta(42, 1_000, 150)?)
                     .unwrap();
 
-            let block = tmp.next_block().unwrap().unwrap();
+            let block = tmp.next_block()?.unwrap();
 
             assert_eq!(block.len(), 462);
 
@@ -97,18 +99,20 @@ GATACGTTTGGGGCAACCCGTAGCACGACCGGCTATGTGTTTTCTTGGACATAGTTTCGTCCACGATATATACAAGGACG
 GGACGCTATTACTCGCCGGTGAGGCGGTCTTCCTTGACTATACCGATCGTGGAGTTCATGCGCGCGGATCCCTCAGCGTTCTCGGGAAGCGCGAACAGAGCGTCCCCTTATACTAATTCCACGCAATGTACTCGCTTACGATTGCAATTT
 ".to_string()
             );
+
+            Ok(())
         }
 
         #[test]
-        fn with_blocksize_offset() {
+        fn with_blocksize_offset() -> error::Result<()> {
             let mut tmp = Producer::with_blocksize_offset(
                 463,
                 154,
-                crate::tests::generate_fasta(42, 1_000, 150),
+                crate::tests::generate_fasta(42, 1_000, 150)?,
             )
             .unwrap();
 
-            let block = tmp.next_block().unwrap().unwrap();
+            let block = tmp.next_block()?.unwrap();
 
             assert_eq!(block.len(), 462);
 
@@ -122,21 +126,25 @@ GGACGCTATTACTCGCCGGTGAGGCGGTCTTCCTTGACTATACCGATCGTGGAGTTCATGCGCGCGGATCCCTCAGCGTT
 GCAAATGAGGACCATCGTCCCTTCATATCGTCGATAAGGAGCTTGATCCTGAATGTCCCTCAATCCGCGGCATGGCTAAGTACCACCGTGGATGTAAATTTTTCAGTCGTCTCTTCATACTGTTCCTGTACTGTCAGGGATGCTCCCTTT
 ".to_string()
             );
+
+            Ok(())
         }
 
         #[test]
-        fn with_blocksize_buffer_larger_file() {
+        fn with_blocksize_buffer_larger_file() -> error::Result<()> {
             let mut tmp =
-                Producer::with_blocksize(8092, crate::tests::generate_fasta(44, 2, 150)).unwrap();
+                Producer::with_blocksize(8092, crate::tests::generate_fasta(44, 2, 150)?).unwrap();
 
-            let block = tmp.next_block().unwrap().unwrap();
+            let block = tmp.next_block()?.unwrap();
 
             assert_eq!(block.len(), 308);
+
+            Ok(())
         }
 
         #[test]
-        fn get_all_block() {
-            let mut tmp = Producer::new(crate::tests::generate_fasta(42, 1_000, 150)).unwrap();
+        fn get_all_block() -> error::Result<()> {
+            let mut tmp = Producer::new(crate::tests::generate_fasta(42, 1_000, 150)?).unwrap();
 
             let mut block_length = Vec::new();
             while let Ok(Some(block)) = tmp.next_block() {
@@ -144,15 +152,17 @@ GCAAATGAGGACCATCGTCCCTTCATATCGTCGATAAGGAGCTTGATCCTGAATGTCCCTCAATCCGCGGCATGGCTAAG
             }
 
             assert_eq!(block_length, vec![65410, 65520, 24960]);
+
+            Ok(())
         }
 
         #[test]
-        fn check_block() {
+        fn check_block() -> error::Result<()> {
             let mut tmp =
-                Producer::with_blocksize(400, crate::tests::generate_fasta(42, 5, 150)).unwrap();
+                Producer::with_blocksize(400, crate::tests::generate_fasta(42, 5, 150)?).unwrap();
 
             assert_eq!(
-                String::from_utf8(tmp.next_block().unwrap().unwrap().data().to_vec()),
+                String::from_utf8(tmp.next_block()?.unwrap().data().to_vec()),
                 Ok(">0
 TTAGATTATAGTACGGTATAGTGGTTACTATGTAGCCTAAGTGGCGCCCGTTGTAGAGGAATCCACTTATATAACACAGGTATAATCCGGACGGCATGCGCAGGCATGCCTATATTCTATGACAGCAGGATTATGGAAGATGGTGCTCTA
 >1
@@ -160,7 +170,7 @@ GATACGTTTGGGGCAACCCGTAGCACGACCGGCTATGTGTTTTCTTGGACATAGTTTCGTCCACGATATATACAAGGACG
 ".to_string())
             );
             assert_eq!(
-                String::from_utf8(tmp.next_block().unwrap().unwrap().data().to_vec()),
+                String::from_utf8(tmp.next_block()?.unwrap().data().to_vec()),
                 Ok(">2
 GGACGCTATTACTCGCCGGTGAGGCGGTCTTCCTTGACTATACCGATCGTGGAGTTCATGCGCGCGGATCCCTCAGCGTTCTCGGGAAGCGCGAACAGAGCGTCCCCTTATACTAATTCCACGCAATGTACTCGCTTACGATTGCAATTT
 >3
@@ -168,51 +178,50 @@ GCAAATGAGGACCATCGTCCCTTCATATCGTCGATAAGGAGCTTGATCCTGAATGTCCCTCAATCCGCGGCATGGCTAAG
 ".to_string())
             );
             assert_eq!(
-                String::from_utf8(tmp.next_block().unwrap().unwrap().data().to_vec()),
+                String::from_utf8(tmp.next_block()?.unwrap().data().to_vec()),
                 Ok(">4
 CACAGAGCTCGTATAATCAGTAAACGCCACGGTCCTTTCTCTGTTAACCGCTATGCTAGAGTTCGACGGATTGCGAACTGTTTATAAAGGTATTATTGGTGGAAGATCGACGCAGTTGGTGCCGCAGGAACCGGTCAACTTAATGCTGAG
 ".to_string())
             );
             assert!(tmp.next_block().is_ok());
-            assert!(tmp.next_block().unwrap().is_none());
+            assert!(tmp.next_block()?.is_none());
+
+            Ok(())
         }
 
         #[test]
-        fn not_a_fasta() {
-            let mut file = tempfile::NamedTempFile::new().unwrap();
-
-            file.write(
+        fn not_a_fasta() -> error::Result<()> {
+            let mut file = crate::tests::write_in_tempfile(
                 b"Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 Vivamus ut nulla eget diam eleifend bibendum.
 Praesent porta sapien id tortor hendrerit, a hendrerit dolor commodo. Donec sed elit enim.",
-            )
-            .unwrap();
+            )?;
 
-            let mut producer = Producer::with_blocksize(150, file.path()).unwrap();
+            let mut producer = Producer::with_blocksize(150, file.path())?;
             assert!(producer.next_block().is_err());
 
             {
-                let mut rewrite = file.reopen().unwrap();
-                rewrite
-                    .write(
-                        b"+FAILLED FILE
+                let mut rewrite = file.reopen()?;
+                rewrite.write(
+                    b"+FAILLED FILE
 +3
 +TTGGGCATGAGGTTCA
 @3ueauie
 +~vGLKg+n!*iJ\\K
 @iuiea
 ",
-                    )
-                    .unwrap();
+                )?;
             }
 
-            let mut producer = Producer::with_blocksize(82, file.path()).unwrap();
+            let mut producer = Producer::with_blocksize(82, file.path())?;
 
             assert!(producer.next_block().is_err());
 
-            let mut producer = Producer::with_blocksize(82, file).unwrap();
+            let mut producer = Producer::with_blocksize(82, file)?;
             assert!(producer.next().is_some());
             assert!(producer.next().unwrap().is_err());
+
+            Ok(())
         }
     }
 
@@ -220,9 +229,9 @@ Praesent porta sapien id tortor hendrerit, a hendrerit dolor commodo. Donec sed 
         use super::*;
 
         #[test]
-        fn iterate_over_seq() {
-            let mut producer =
-                Producer::with_blocksize(500, crate::tests::generate_fasta(42, 5, 150)).unwrap();
+        fn iterate_over_seq() -> error::Result<()> {
+            let mut file = crate::tests::generate_fasta(42, 5, 150)?;
+            let mut producer = Producer::with_blocksize(500, file)?;
 
             let mut comments = Vec::new();
             let mut seqs = Vec::new();
@@ -250,7 +259,9 @@ Praesent porta sapien id tortor hendrerit, a hendrerit dolor commodo. Donec sed 
                 seqs,
                 vec![
 "TTAGATTATAGTACGGTATAGTGGTTACTATGTAGCCTAAGTGGCGCCCGTTGTAGAGGAATCCACTTATATAACACAGGTATAATCCGGACGGCATGCGCAGGCATGCCTATATTCTATGACAGCAGGATTATGGAAGATGGTGCTCTA".to_string(), "GATACGTTTGGGGCAACCCGTAGCACGACCGGCTATGTGTTTTCTTGGACATAGTTTCGTCCACGATATATACAAGGACGCTTGGGAATAGGGCAGCGGAGTTATCGTGTACCTCCTAGCTTTTAGTTGTGCTTTAACAGTGTAACATTG".to_string(), "GGACGCTATTACTCGCCGGTGAGGCGGTCTTCCTTGACTATACCGATCGTGGAGTTCATGCGCGCGGATCCCTCAGCGTTCTCGGGAAGCGCGAACAGAGCGTCCCCTTATACTAATTCCACGCAATGTACTCGCTTACGATTGCAATTT".to_string(), "GCAAATGAGGACCATCGTCCCTTCATATCGTCGATAAGGAGCTTGATCCTGAATGTCCCTCAATCCGCGGCATGGCTAAGTACCACCGTGGATGTAAATTTTTCAGTCGTCTCTTCATACTGTTCCTGTACTGTCAGGGATGCTCCCTTT".to_string(), "CACAGAGCTCGTATAATCAGTAAACGCCACGGTCCTTTCTCTGTTAACCGCTATGCTAGAGTTCGACGGATTGCGAACTGTTTATAAAGGTATTATTGGTGGAAGATCGACGCAGTTGGTGCCGCAGGAACCGGTCAACTTAATGCTGAG".to_string()]
-            );
+        );
+
+            Ok(())
         }
     }
 }

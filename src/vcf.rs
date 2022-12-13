@@ -11,59 +11,8 @@ use crate::error;
 use crate::impl_producer;
 use crate::impl_reader;
 
-/// Struct that store header information
-pub struct Header {}
-
-/// Record of vcf header
-pub struct HeaderRecord<'a> {
-    /// type of header record
-    pub ttype: &'a [u8],
-
-    /// data associate to record
-    pub data: &'a [u8],
-}
-
-impl<'a> HeaderRecord<'a> {
-    /// Generate a new record from a line
-    pub fn from_line(line: &'a [u8]) -> error::Result<Self> {
-        let pos_equal = line.find_byte(b'=').ok_or(error::Error::NotAVcfFile)?;
-
-        Ok(Self {
-            ttype: &line[2..pos_equal],
-            data: &line[pos_equal + 1..],
-        })
-    }
-}
-
-impl_producer!(HeaderProducer, |block: &[u8]| {
-    let mut end = block.len();
-
-    end = block[..end]
-        .rfind_byte(b'\n')
-        .ok_or(error::Error::NoNewLineInBlock)?;
-
-    let start_last_line = block[..end]
-        .rfind(b"#CHR")
-        .ok_or(error::Error::NotAVcfFile)?;
-    end = block[start_last_line..]
-        .find_byte(b'\n')
-        .ok_or(error::Error::NotAVcfFile)?;
-
-    Ok((end + 1) as u64)
-});
-
-impl_reader!(
-    HeaderReader,
-    'a,
-    HeaderRecord,
-    |block: &'a block::Block, offset: &mut usize| {
-    if *offset == block.len() {
-        Ok(None)
-    } else {
-        Ok(Some(HeaderRecord::from_line(&block.data()[Self::get_line(block, offset)?])?))
-    }
-    }
-);
+/* mod declaration */
+pub mod header;
 
 /// Struct that store a VCF record
 pub struct Record<'a> {

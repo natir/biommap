@@ -26,11 +26,19 @@ pub const DEFAULT_BLOCKSIZE: u64 = 65536;
 
 #[cfg(test)]
 mod tests {
+    /* crate use */
     use rand::Rng;
     use rand::SeedableRng;
     use std::io::Write;
 
-    pub fn generate_fastq(seed: u64, nb_seq: usize, length: usize) -> tempfile::NamedTempFile {
+    /* project use */
+    use crate::error;
+
+    pub fn generate_fastq(
+        seed: u64,
+        nb_seq: usize,
+        length: usize,
+    ) -> error::Result<tempfile::NamedTempFile> {
         let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
 
         let mut file = tempfile::NamedTempFile::new().unwrap();
@@ -49,14 +57,17 @@ mod tests {
             writeln!(file, "@{}\n{}\n+{}\n{}", i, dna_seq, i, qual_seq).unwrap();
         }
 
-        file
+        Ok(file)
     }
 
-    #[allow(dead_code)]
-    pub fn generate_fasta(seed: u64, nb_seq: usize, length: usize) -> tempfile::NamedTempFile {
+    pub fn generate_fasta(
+        seed: u64,
+        nb_seq: usize,
+        length: usize,
+    ) -> error::Result<tempfile::NamedTempFile> {
         let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
 
-        let mut file = tempfile::NamedTempFile::new().unwrap();
+        let mut file = tempfile::NamedTempFile::new()?;
 
         let dna = [b'A', b'C', b'T', b'G'];
 
@@ -65,9 +76,17 @@ mod tests {
                 .map(|_| dna[rng.gen_range(0..4)] as char)
                 .collect::<String>();
 
-            writeln!(file, ">{}\n{}", i, dna_seq).unwrap();
+            writeln!(file, ">{}\n{}", i, dna_seq)?;
         }
 
-        file
+        Ok(file)
+    }
+
+    pub fn write_in_tempfile(data: &[u8]) -> error::Result<tempfile::NamedTempFile> {
+        let mut tempfile = tempfile::NamedTempFile::new()?;
+
+        tempfile.write_all(data)?;
+
+        Ok(tempfile)
     }
 }

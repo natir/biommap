@@ -27,6 +27,10 @@ pub enum Error {
         source: std::io::Error,
     },
 
+    /// Generic io::Error
+    #[error(transparent)]
+    IO(#[from] std::io::Error),
+
     /// biommap didn't find a new line in block, extend block size could by a solution
     #[error("biommap didn't find new line in block increase block size")]
     NoNewLineInBlock,
@@ -43,9 +47,33 @@ pub enum Error {
     #[error("Input file seems not be a vcf file")]
     NotAVcfFile,
 
+    /// Vcf error
+    #[error(transparent)]
+    VcfError(#[from] VcfError),
+
     /// Current record seems to be a partial record
     #[error("biommap found a partial record")]
     PartialRecord,
+}
+
+/// Enum to manage vcf error
+#[derive(std::fmt::Debug, thiserror::Error)]
+pub enum VcfError {
+    /// Blocksize of header reader isn't larger than header increased it
+    #[error("Blocksize of header reader isn't larger than header increased it")]
+    HeaderBlockTooShort,
+
+    /// Header Vcf Info header not complete
+    #[error("A header info record not containt ID, Number, Type and Description")]
+    HeaderInfoPartial,
+
+    /// Header Vcf Filter header not complete
+    #[error("A header filter record not containt ID, Number, Type and Description")]
+    HeaderFilterPartial,
+
+    /// Header Vcf Format header not complete
+    #[error("A header format record not containt ID, Number, Type and Description")]
+    HeaderFormatPartial,
 }
 
 /// Alias of result

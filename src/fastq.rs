@@ -100,23 +100,25 @@ mod tests {
         use std::io::Write;
 
         #[test]
-        fn new() {
-            let mut tmp = Producer::new(crate::tests::generate_fastq(42, 100, 150)).unwrap();
+        fn new() -> error::Result<()> {
+            let file = crate::tests::generate_fastq(42, 100, 150)?;
+            let mut tmp = Producer::new(file).unwrap();
 
-            let block = tmp.next_block().unwrap().unwrap();
+            let block = tmp.next_block()?.unwrap();
 
             assert_eq!(block.len(), 30980);
 
-            assert!(tmp.next_block().unwrap().is_none());
+            assert!(tmp.next_block()?.is_none());
+
+            Ok(())
         }
 
         #[test]
-        fn with_blocksize() {
-            let mut tmp =
-                Producer::with_blocksize(463, crate::tests::generate_fastq(42, 1_000, 150))
-                    .unwrap();
+        fn with_blocksize() -> error::Result<()> {
+            let file = crate::tests::generate_fastq(42, 100, 150)?;
+            let mut tmp = Producer::with_blocksize(463, file).unwrap();
 
-            let block = tmp.next_block().unwrap().unwrap();
+            let block = tmp.next_block()?.unwrap();
 
             assert_eq!(block.len(), 308);
 
@@ -128,18 +130,16 @@ TTAGATTATAGTACGGTATAGTGGTTACTATGTAGCCTAAGTGGCGCCCGTTGTAGAGGAATCCACTTATATAACACAGG
 ^U3<L0PV{cnrl:8N`!:=mF8M0!0Ez/d{4j$=9f5rLeAQ-H.ptT3w6aMy8Z6O-dZ}2`UX=YJ-Etg`s&B%~F!kR7S8]@lTI<2-\\';v0}hU.(T*0VHGx,>Gze)*5rFv}k@RllOE2K)\"DQJvO)bl?(dDhh
 ".to_string()
             );
+
+            Ok(())
         }
 
         #[test]
-        fn with_blocksize_offset() {
-            let mut tmp = Producer::with_blocksize_offset(
-                463,
-                308,
-                crate::tests::generate_fastq(42, 1_000, 150),
-            )
-            .unwrap();
+        fn with_blocksize_offset() -> error::Result<()> {
+            let file = crate::tests::generate_fastq(42, 100, 150)?;
+            let mut tmp = Producer::with_blocksize_offset(463, 308, file).unwrap();
 
-            let block = tmp.next_block().unwrap().unwrap();
+            let block = tmp.next_block()?.unwrap();
 
             assert_eq!(block.len(), 308);
 
@@ -151,21 +151,26 @@ AGTTATCGTGTACCTCCTAGCTTTTAGTTGTGCTTTAACAGTGTAACATTGGGACGCTATTACTCGCCGGTGAGGCGGTC
 iCW?:KL~15\\E|MNRKY)S$?~~Ub}d)dY2LX:e@b^'<<$$e56W0fdV,<Y>Yd(J<5p6xt)z+OxuPXv?/_yH8z^%Sks1*nxm$<7*YdkvNPf:>YW=$uxZ)}[v/DlZm&EW(s(cMelx\"iEV3Hp]cz3%_T@\\Ms
 ".to_string()
             );
+
+            Ok(())
         }
 
         #[test]
-        fn with_blocksize_buffer_larger_file() {
-            let mut tmp =
-                Producer::with_blocksize(8092, crate::tests::generate_fastq(44, 2, 150)).unwrap();
+        fn with_blocksize_buffer_larger_file() -> error::Result<()> {
+            let file = crate::tests::generate_fastq(42, 100, 150)?;
+            let mut tmp = Producer::with_blocksize(8092, file).unwrap();
 
             let block = tmp.next_block().unwrap().unwrap();
 
             assert_eq!(block.len(), 616);
+
+            Ok(())
         }
 
         #[test]
-        fn get_all_block() {
-            let mut tmp = Producer::new(crate::tests::generate_fastq(42, 1_000, 150)).unwrap();
+        fn get_all_block() -> error::Result<()> {
+            let file = crate::tests::generate_fastq(42, 100, 150)?;
+            let mut tmp = Producer::new(file).unwrap();
 
             let mut block_length = Vec::new();
             while let Ok(Some(block)) = tmp.next_block() {
@@ -173,15 +178,18 @@ iCW?:KL~15\\E|MNRKY)S$?~~Ub}d)dY2LX:e@b^'<<$$e56W0fdV,<Y>Yd(J<5p6xt)z+OxuPXv?/_y
             }
 
             assert_eq!(block_length, vec![65300, 65520, 65520, 65520, 49920]);
+
+            Ok(())
         }
 
         #[test]
-        fn check_block() {
-            let mut tmp =
-                Producer::with_blocksize(800, crate::tests::generate_fastq(42, 5, 150)).unwrap();
+        fn check_block() -> error::Result<()> {
+            let file = crate::tests::generate_fastq(42, 100, 150)?;
+
+            let mut tmp = Producer::with_blocksize(800, file)?;
 
             assert_eq!(
-                String::from_utf8(tmp.next_block().unwrap().unwrap().data().to_vec()),
+                String::from_utf8(tmp.next_block()?.unwrap().data().to_vec()),
                 Ok("@0
 TTAGATTATAGTACGGTATAGTGGTTACTATGTAGCCTAAGTGGCGCCCGTTGTAGAGGAATCCACTTATATAACACAGGTATAATCCGGACGGCATGCGCAGGCATGCCTATATTCTATGACAGCAGGATTATGGAAGATGGTGCTCTA
 +0
@@ -193,7 +201,7 @@ iCW?:KL~15\\E|MNRKY)S$?~~Ub}d)dY2LX:e@b^'<<$$e56W0fdV,<Y>Yd(J<5p6xt)z+OxuPXv?/_y
 ".to_string())
             );
             assert_eq!(
-                String::from_utf8(tmp.next_block().unwrap().unwrap().data().to_vec()),
+                String::from_utf8(tmp.next_block()?.unwrap().data().to_vec()),
                 Ok("@2
 AATGTCCCTCAATCCGCGGCATGGCTAAGTACCACCGTGGATGTAAATTTTTCAGTCGTCTCTTCATACTGTTCCTGTACTGTCAGGGATGCTCCCTTTCACAGAGCTCGTATAATCAGTAAACGCCACGGTCCTTTCTCTGTTAACCGC
 +2
@@ -205,7 +213,7 @@ TTGGGCATGAGGTTCACCGAAGGTGGCAGATATGCGCCATAAATTGACCAGGTTGTATCCAGCATTGGAAGAACGCACCC
 ".to_string())
             );
             assert_eq!(
-                String::from_utf8(tmp.next_block().unwrap().unwrap().data().to_vec()),
+                String::from_utf8(tmp.next_block()?.unwrap().data().to_vec()),
                 Ok("@4
 TCTATAGCTTGTCATGCCTTTCGATTGAGGGCGTCACCAAGCGAATTACTCGCTGATCCGTTCCCCGCCAATTCTGAGACTCCATAATCCTATCTGTGTCCCTAGGTGCCGTGTTCCGGTCGTGAGTTCGGCCCTTGCCTAAAGTTAATG
 +4
@@ -214,25 +222,27 @@ myS=C|jEWnl,aC\\7!jv9[!vh/PAK}_H&<.o]qf|y@4L:?ssLg3N!v7/N5RyPHn=5%Fyh(4-Z:<6wf]^
             );
             assert!(tmp.next_block().is_ok());
             assert!(tmp.next_block().unwrap().is_none());
+
+            Ok(())
         }
 
         #[test]
-        fn quality_is_shit() {
+        fn quality_is_shit() -> error::Result<()> {
             let data = b"@1\nAA\n+1\n!!\n@2\nTT\n+2\n!!";
-            assert_eq!(Producer::correct_block_size(data).unwrap(), 12);
+            assert_eq!(Producer::correct_block_size(data)?, 12);
 
             let data = b"@1\nAA\n+1\n!!\n@2\nTT\n+2\n+!\n@3";
-            assert_eq!(Producer::correct_block_size(data).unwrap(), 24);
+            assert_eq!(Producer::correct_block_size(data)?, 24);
 
             let data = b"@1\nAA\n+1\n!!\n@2\nTT\n+2\n@!";
-            assert_eq!(Producer::correct_block_size(data).unwrap(), 12);
+            assert_eq!(Producer::correct_block_size(data)?, 12);
+
+            Ok(())
         }
 
         #[test]
-        fn not_a_fastq() {
-            let mut file = tempfile::NamedTempFile::new().unwrap();
-
-            file.write(
+        fn not_a_fastq() -> error::Result<()> {
+            let mut file = crate::tests::write_in_tempfile(
                 b"@0
 TTAGATTATAGTACGG
 ATTATAT
@@ -243,35 +253,34 @@ AGTTATCGTGTACCTC
 GTCCCTCAATCCG
 +2
 ",
-            )
-            .unwrap();
+            )?;
 
-            let mut producer = Producer::with_blocksize(82, file.path()).unwrap();
+            let mut producer = Producer::with_blocksize(82, file)?;
 
             assert!(producer.next_block().is_err());
 
             {
                 let mut rewrite = file.reopen().unwrap();
-                rewrite
-                    .write(
-                        b"+FAILLED FILE
+                rewrite.write(
+                    b"+FAILLED FILE
 +3
 +TTGGGCATGAGGTTCA
 @3ueauie
 +~vGLKg+n!*iJ\\K
 @iuiea
 ",
-                    )
-                    .unwrap();
+                )?;
             }
 
-            let mut producer = Producer::with_blocksize(82, file.path()).unwrap();
+            let mut producer = Producer::with_blocksize(82, file)?;
 
             assert!(producer.next_block().is_err());
 
-            let mut producer = Producer::with_blocksize(82, file).unwrap();
+            let mut producer = Producer::with_blocksize(82, file)?;
             assert!(producer.next().is_some());
             assert!(producer.next().unwrap().is_err());
+
+            Ok(())
         }
     }
 
@@ -279,9 +288,9 @@ GTCCCTCAATCCG
         use super::*;
 
         #[test]
-        fn iterate_over_seq() {
-            let mut producer =
-                Producer::with_blocksize(500, crate::tests::generate_fastq(42, 5, 150)).unwrap();
+        fn iterate_over_seq() -> error::Result<()> {
+            let mut file = crate::tests::generate_fasta(42, 5, 150)?;
+            let mut producer = Producer::with_blocksize(500, file)?;
 
             let mut comments = Vec::new();
             let mut seqs = Vec::new();
@@ -336,6 +345,8 @@ GTCCCTCAATCCG
 		    "myS=C|jEWnl,aC\\7!jv9[!vh/PAK}_H&<.o]qf|y@4L:?ssLg3N!v7/N5RyPHn=5%Fyh(4-Z:<6wf]^#t~0:i(X\\l-7]9olH9WLV~`L~JQ7ye7B1RSi2N$PuHwjj\\pb}J\\R~pe?j+X>R#p@MyqBBe*".to_string(),
 		]
             );
+
+            Ok(())
         }
     }
 }

@@ -247,9 +247,11 @@ macro_rules! impl_reader {
 mod tests {
     use super::*;
 
+    use crate::error;
+
     #[test]
-    fn block() {
-        let file = crate::tests::generate_fastq(42, 1_000, 50);
+    fn block() -> error::Result<()> {
+        let file = crate::tests::generate_fastq(42, 1_000, 50)?;
 
         let data = unsafe {
             memmap2::MmapOptions::new()
@@ -279,5 +281,7 @@ mod tests {
 
         assert_eq!(block.len(), 200);
         assert!(!block.is_empty());
+
+        Ok(())
     }
 }
