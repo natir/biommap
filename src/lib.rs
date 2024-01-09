@@ -8,7 +8,7 @@
 
 /* project use */
 #[cfg(feature = "derive")]
-pub use biommap_derive::{self, *};
+pub use biommap_derive as derive;
 
 /* mod declaration */
 pub mod block;

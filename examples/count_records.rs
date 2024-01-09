@@ -30,6 +30,16 @@ impl std::fmt::Display for SequenceType {
     }
 }
 
+#[biommap::derive::sequential_parser(name = CountFastaRecord, data_type = u64, block_type = biommap::block::Block<memmap2::Mmap>, block_producer = biommap::fasta::File2Block, record_producer = biommap::fasta::Block2Record)]
+fn parser(&mut self, _record: biommap::fasta::Record, counter: &mut u64) {
+    *counter += 1;
+}
+
+#[biommap::derive::sequential_parser(name = CountFastqRecord, data_type = u64, block_type = biommap::block::Block<memmap2::Mmap>, block_producer = biommap::fastq::File2Block, record_producer = biommap::fastq::Block2Record)]
+fn parser(&mut self, _record: biommap::fastq::Record, counter: &mut u64) {
+    *counter += 1;
+}
+
 /// Example: Count fasta record in file.
 #[derive(clap::Parser, std::fmt::Debug)]
 #[clap(
@@ -82,34 +92,16 @@ fn main() -> anyhow::Result<()> {
         SequenceType::Fasta => {
             log::info!("fasta mode");
 
-            let mut blocks =
-                biommap::fasta::File2Block::with_blocksize(params.block_size, &params.input_path)?;
+            let mut parser = CountFastaRecord::new();
 
-            while let Some(block) = blocks.next_block()? {
-                log::info!("block length: {}", block.len());
-                let mut records = biommap::fasta::Block2Record::new(block);
-
-                while let Some(record) = records.next_record()? {
-                    log::info!("record length: {}", record.sequence().len());
-                    records_counter += 1;
-                }
-            }
+            parser.with_blocksize(params.block_size, &params.input_path, &mut records_counter)?;
         }
         SequenceType::Fastq => {
             log::info!("fastq mode");
 
-            let mut blocks =
-                biommap::fastq::File2Block::with_blocksize(params.block_size, &params.input_path)?;
+            let mut parser = CountFastqRecord::new();
 
-            while let Some(block) = blocks.next_block()? {
-                log::info!("block length: {}", block.len());
-                let mut records = biommap::fastq::Block2Record::new(block);
-
-                while let Some(record) = records.next_record()? {
-                    log::info!("record length: {}", record.sequence().len());
-                    records_counter += 1;
-                }
-            }
+            parser.with_blocksize(params.block_size, &params.input_path, &mut records_counter)?;
         }
     }
 
