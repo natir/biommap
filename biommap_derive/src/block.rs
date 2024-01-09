@@ -26,22 +26,41 @@ impl File2BlockAttributes {
     }
 }
 
-pub fn file2block_quote(
+fn impl_iterator(
     name: Option<syn::Ident>,
-    block_type: Option<syn::Type>,
-    method: syn::ItemFn,
+    iterator_type: Option<syn::Type>,
 ) -> proc_macro2::TokenStream {
+    quote::quote! {
+    impl Iterator for #name {
+            type Item = error::Result<#iterator_type>;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                match self.next_block() {
+                    Ok(Some(block)) => Some(Ok(block)),
+                    Ok(None) => None,
+                    Err(e) => Some(Err(e)),
+                }
+            }
+    }
+    }
+}
+
+fn block_struct(name: Option<syn::Ident>) -> proc_macro2::TokenStream {
     quote::quote! {
     /// Block producer
     pub struct #name {
-        offset: u64,
-        blocksize: u64,
-        file: std::fs::File,
-        file_length: u64,
+            offset: u64,
+            blocksize: u64,
+            file: std::fs::File,
+            file_length: u64,
     }
+    }
+}
 
+fn block_base_impl(name: Option<syn::Ident>) -> proc_macro2::TokenStream {
+    quote::quote! {
     impl #name {
-        /// Create a new Block producer
+            /// Create a new Block producer
             #[inline(always)]
             pub fn new<P>(path: P) -> error::Result<Self>
             where
@@ -97,39 +116,7 @@ pub fn file2block_quote(
                 })
             }
 
-            /// Get next block
-            pub fn next_block(&mut self) -> error::Result<Option<block::Block<#block_type>>> {
-                if self.offset() == self.file_length() {
-                    Ok(None)
-                } else if self.offset() + self.blocksize() >= self.file_length() {
-                    let data = unsafe {
-                        memmap2::MmapOptions::new()
-                            .offset(self.offset())
-                            .len((self.file_length() - self.offset()) as usize)
-                            .map(self.file())
-                            .map_err(|source| error::Error::MapFile { source })?
-                    };
-
-                    self.set_offset(self.file_length());
-            let data_len = data.len() as u64;
-
-                    Ok(Some(block::Block::new(data, data_len)))
-                } else {
-                    let data = unsafe {
-                        memmap2::MmapOptions::new()
-                            .offset(self.offset())
-                            .len(self.blocksize() as usize)
-                            .map(self.file())
-                            .map_err(|source| error::Error::MapFile { source })?
-                    };
-
-                    let blocksize = Self::correct_block_size(&data)?;
-                    self.set_offset(self.offset() + blocksize);
-                    Ok(Some(block::Block::new(data, blocksize)))
-                }
-            }
-
-            /// Get file size
+        /// Get file size
             pub fn filesize<P>(path: &P) -> error::Result<u64>
             where
                 P: AsRef<std::path::Path>,
@@ -149,9 +136,6 @@ pub fn file2block_quote(
             {
                 Ok(Self::filesize::<P>(path)?.min(blocksize) as u64)
             }
-
-    /// Search the begin of the partial record at the end of #name [Block](Block)
-            #method
 
             /// Get current value of offset
             pub fn offset(&self) -> u64 {
@@ -176,23 +160,68 @@ pub fn file2block_quote(
             /// Set value of offset
             pub fn set_offset(&mut self, value: u64) {
                 self.offset = value;
-    }
-
         }
-
-        impl Iterator for #name {
-            type Item = error::Result<block::Block<#block_type>>;
-
-            fn next(&mut self) -> Option<Self::Item> {
-                match self.next_block() {
-                    Ok(Some(block)) => Some(Ok(block)),
-                    Ok(None) => None,
-                    Err(e) => Some(Err(e)),
-                }
-            }
     }
-
     }
+}
+
+pub fn file2block_quote(
+    name: Option<syn::Ident>,
+    block_type: Option<syn::Type>,
+    method: syn::ItemFn,
+) -> proc_macro2::TokenStream {
+    let struct_token = block_struct(name.clone());
+    let impl_token = block_base_impl(name.clone());
+    let iterator_token = impl_iterator(
+        name.clone(),
+        Some(syn::parse2(quote::quote! {block::Block<#block_type>}).unwrap()),
+    );
+
+    quote::quote! {
+    #struct_token
+
+    #impl_token
+
+         impl #name {
+
+                 /// Get next block
+                 pub fn next_block(&mut self) -> error::Result<Option<block::Block<#block_type>>> {
+                     if self.offset() == self.file_length() {
+                         Ok(None)
+                     } else if self.offset() + self.blocksize() >= self.file_length() {
+                         let data = unsafe {
+                             memmap2::MmapOptions::new()
+                                 .offset(self.offset())
+                                 .len((self.file_length() - self.offset()) as usize)
+                                 .map(self.file())
+                                 .map_err(|source| error::Error::MapFile { source })?
+                         };
+
+                         self.set_offset(self.file_length());
+                 let data_len = data.len() as u64;
+
+                         Ok(Some(block::Block::new(data, data_len)))
+                     } else {
+                         let data = unsafe {
+                             memmap2::MmapOptions::new()
+                                 .offset(self.offset())
+                                 .len(self.blocksize() as usize)
+                                 .map(self.file())
+                                 .map_err(|source| error::Error::MapFile { source })?
+                         };
+
+                         let blocksize = Self::correct_block_size(&data)?;
+                         self.set_offset(self.offset() + blocksize);
+                         Ok(Some(block::Block::new(data, blocksize)))
+                     }
+                 }
+
+         /// Search the begin of the partial record at the end of #name [Block](Block)
+                 #method
+         }
+
+    #iterator_token
+         }
 }
 
 #[derive(Default)]
@@ -215,38 +244,63 @@ impl Block2RecordAttributes {
     }
 }
 
+fn block2record_struct(
+    name: Option<syn::Ident>,
+    generic_type: Option<syn::Type>,
+) -> proc_macro2::TokenStream {
+    quote::quote! {
+    /// #name is a reader struct
+        pub struct #name<#generic_type> {
+            offset: u64,
+            block: block::Block<#generic_type>,
+        }
+    }
+}
+
+fn block2record_base_impl(
+    name: Option<syn::Ident>,
+    generic_type: Option<syn::Type>,
+) -> proc_macro2::TokenStream {
+    quote::quote! {
+        impl<#generic_type> #name<#generic_type>
+        where
+            #generic_type: core::convert::AsRef<[u8]>,
+        {
+                /// Create a new #name
+                pub fn new(block: block::Block<#generic_type>) -> Self {
+                    Self { offset: 0, block }
+                }
+
+                /// A utils function to get range of the next line
+                pub fn get_line(&self) -> error::Result<std::ops::Range<usize>> {
+                    let next = memchr::memchr(b'\n', &self.block.data()[self.offset as usize..])
+                        .ok_or(error::Error::PartialRecord)?;
+                    let range = self.offset as usize..self.offset as usize + next;
+
+                    Ok(range)
+                }
+            }
+    }
+}
 pub fn block2record_quote(
     name: Option<syn::Ident>,
     generic_type: Option<syn::Type>,
     method: syn::ItemFn,
 ) -> proc_macro2::TokenStream {
+    let struct_token = block2record_struct(name.clone(), generic_type.clone());
+    let impl_token = block2record_base_impl(name.clone(), generic_type.clone());
+
     quote::quote! {
-    /// $name is a reader struct
-        pub struct #name<#generic_type> {
-            offset: u64,
-            block: block::Block<#generic_type>,
-        }
+    #struct_token
+
+    #impl_token
 
         impl<#generic_type> #name<#generic_type>
-    where
-        #generic_type: core::convert::AsRef<[u8]>,
-    {
-            /// Create a new $name
-            pub fn new(block: block::Block<#generic_type>) -> Self {
-                Self { offset: 0, block }
-            }
-
-            /// Get the next available record
-            #method
-
-            /// A utils function to get range of the next line
-            pub fn get_line(&self) -> error::Result<std::ops::Range<usize>> {
-                let next = memchr::memchr(b'\n', &self.block.data()[self.offset as usize..])
-                    .ok_or(error::Error::PartialRecord)?;
-                let range = self.offset as usize..self.offset as usize + next;
-
-                Ok(range)
-            }
-        }
+        where
+            #generic_type: core::convert::AsRef<[u8]>,
+        {
+                /// Get the next available record
+                #method
+    }
     }
 }

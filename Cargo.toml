@@ -63,7 +63,7 @@ anyhow         = { version = "1" }
 
 [[example]]
 name = "count_records"
-required-features = ["fasta", "derive"]
+required-features = ["fasta", "fastq", "derive"]
 
 
 [profile.release]

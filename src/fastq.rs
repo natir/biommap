@@ -81,7 +81,7 @@ impl<'a> Record<'a> {
 
 #[cfg(feature = "derive")]
 #[biommap_derive::block2record(name = Block2Record, generic_type = DATA)]
-pub fn fasta(&mut self) -> error::Result<Option<Record<'_>>> {
+pub fn fastq(&mut self) -> error::Result<Option<Record<'_>>> {
     if self.offset == self.block.len() {
         Ok(None)
     } else {
