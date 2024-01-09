@@ -5,6 +5,8 @@
 /* std use */
 
 /* crate use */
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 
 use clap::Parser as _;
 
@@ -30,14 +32,28 @@ impl std::fmt::Display for SequenceType {
     }
 }
 
+#[cfg(not(feature = "parallel"))]
 #[biommap::derive::sequential_parser(name = CountFastaRecord, data_type = u64, block_type = biommap::block::Block<memmap2::Mmap>, block_producer = biommap::fasta::File2Block, record_producer = biommap::fasta::Block2Record)]
 fn parser(&mut self, _record: biommap::fasta::Record, counter: &mut u64) {
     *counter += 1;
 }
 
+#[cfg(feature = "parallel")]
+#[biommap::derive::sharedstate_parser(name = CountFastaRecord, data_type = std::sync::atomic::AtomicU64, block_producer = biommap::fasta::File2Block, record_producer = biommap::fasta::Block2Record)]
+fn parser(_record: biommap::fasta::Record, counter: &std::sync::atomic::AtomicU64) {
+    counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+}
+
+#[cfg(not(feature = "parallel"))]
 #[biommap::derive::sequential_parser(name = CountFastqRecord, data_type = u64, block_type = biommap::block::Block<memmap2::Mmap>, block_producer = biommap::fastq::File2Block, record_producer = biommap::fastq::Block2Record)]
 fn parser(&mut self, _record: biommap::fastq::Record, counter: &mut u64) {
     *counter += 1;
+}
+
+#[cfg(feature = "parallel")]
+#[biommap::derive::sharedstate_parser(name = CountFastqRecord, data_type = std::sync::atomic::AtomicU64, block_producer = biommap::fastq::File2Block, record_producer = biommap::fastq::Block2Record)]
+fn parser(_record: biommap::fastq::Record, counter: &std::sync::atomic::AtomicU64) {
+    counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
 }
 
 /// Example: Count fasta record in file.
@@ -57,8 +73,12 @@ pub struct Command {
     pub block_size: u64,
 
     /// Sequence type
-    #[clap(short = 't', long = "type", value_enum)]
+    #[clap(short = 's', long = "type", value_enum)]
     pub sequence_type: SequenceType,
+
+    /// Number of thread usable
+    #[clap(short = 't', long = "threads")]
+    pub threads: usize,
 
     // Basic parameter
     /// Silence all output
@@ -86,6 +106,15 @@ fn main() -> anyhow::Result<()> {
         .init()
         .unwrap();
 
+    #[cfg(feature = "parallel")]
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(params.threads)
+        .build_global()?;
+
+    #[cfg(feature = "parallel")]
+    let records_counter = std::sync::atomic::AtomicU64::new(0);
+
+    #[cfg(not(feature = "parallel"))]
     let mut records_counter = 0;
 
     match params.sequence_type {
@@ -94,6 +123,10 @@ fn main() -> anyhow::Result<()> {
 
             let mut parser = CountFastaRecord::new();
 
+            #[cfg(feature = "parallel")]
+            parser.with_blocksize(params.block_size, &params.input_path, &records_counter)?;
+
+            #[cfg(not(feature = "parallel"))]
             parser.with_blocksize(params.block_size, &params.input_path, &mut records_counter)?;
         }
         SequenceType::Fastq => {
@@ -101,14 +134,23 @@ fn main() -> anyhow::Result<()> {
 
             let mut parser = CountFastqRecord::new();
 
+            #[cfg(feature = "parallel")]
+            parser.with_blocksize(params.block_size, &params.input_path, &records_counter)?;
+
+            #[cfg(not(feature = "parallel"))]
             parser.with_blocksize(params.block_size, &params.input_path, &mut records_counter)?;
         }
     }
 
+    #[cfg(feature = "parallel")]
+    let value = records_counter.load(std::sync::atomic::Ordering::SeqCst);
+    #[cfg(not(feature = "parallel"))]
+    let value = records_counter;
+
     println!(
         "{} contains {} {} records",
         params.input_path.into_os_string().into_string().unwrap(),
-        records_counter,
+        value,
         params.sequence_type,
     );
 
