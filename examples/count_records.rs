@@ -1,4 +1,4 @@
-//! Ar efficient bioinformatics file parser based on memory mapping of file.
+//! An efficient bioinformatics file parser based on memory mapping of file.
 
 #![warn(missing_docs)]
 
@@ -76,6 +76,7 @@ pub struct Command {
     #[clap(short = 's', long = "type", value_enum)]
     pub sequence_type: SequenceType,
 
+    #[cfg(feature = "parallel")]
     /// Number of thread usable
     #[clap(short = 't', long = "threads")]
     pub threads: usize,
