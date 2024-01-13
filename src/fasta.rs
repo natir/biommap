@@ -304,4 +304,47 @@ mod tests {
 
         Ok(())
     }
+
+    #[cfg(all(feature = "derive", feature = "parallel"))]
+    #[test]
+    fn map_reduce() -> error::Result<()> {
+        use crate as biommap;
+
+        let temp = tempfile::NamedTempFile::new()?;
+        let mut rng = crate::tests::generator::rng();
+
+        biommap::tests::io::write_fasta(&mut rng, 150, 20, temp.path())?;
+
+        #[derive(Default)]
+        struct Accumulator {
+            pub inner: [u64; 4],
+        }
+
+        impl biommap::parser::map_reduce::Accumulator for Accumulator {
+            fn accumulate(&mut self, other: Self) {
+                for i in 0..4 {
+                    self.inner[i] += other.inner[i];
+                }
+            }
+        }
+
+        #[biommap::derive::map_reduce_parser(name = CountNuc, data_type = Accumulator, block_producer = biommap::fasta::File2Block, record_producer = biommap::fasta::Block2Record)]
+        fn parser(record: biommap::fasta::Record) -> Accumulator {
+            let data = Accumulator::default();
+
+            for nuc in record.sequence() {
+                data.inner[((nuc >> 1) & 0b11) as usize] += 1;
+            }
+
+            data
+        }
+
+        let mut parser = CountNuc::new();
+
+        let counter = parser.parse(temp.path())?;
+
+        assert_eq!([724, 756, 764, 756], counter.inner);
+
+        Ok(())
+    }
 }

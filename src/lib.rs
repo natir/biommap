@@ -24,5 +24,7 @@ pub mod fasta;
 #[cfg(feature = "fastq")]
 pub mod fastq;
 
+pub mod parser;
+
 /// Define default blocksize
 pub const DEFAULT_BLOCKSIZE: u64 = 8192;
