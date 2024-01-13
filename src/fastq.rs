@@ -110,6 +110,10 @@ pub fn fastq(&mut self) -> error::Result<Option<Record<'_>>> {
 mod tests {
     /* std use */
 
+    /* crate use */
+    #[cfg(feature = "parallel")]
+    use rayon::prelude::*;
+
     /* project use */
 
     /* local use */
@@ -370,6 +374,69 @@ GTCCCTCAATCCG
         let mut blocks = File2Block::with_blocksize(82, temp.path())?;
         assert!(blocks.next().is_some());
         assert!(blocks.next().unwrap().is_err());
+
+        Ok(())
+    }
+
+    #[cfg(feature = "derive")]
+    #[test]
+    fn sequential() -> error::Result<()> {
+        use crate as biommap;
+
+        let temp = tempfile::NamedTempFile::new()?;
+        let mut rng = crate::tests::generator::rng();
+
+        biommap::tests::io::write_fastq(&mut rng, 150, 20, temp.path())?;
+
+        #[biommap::derive::sequential_parser(name = CountNuc, data_type = [u64; 4], block_type = biommap::block::Block<memmap2::Mmap>, block_producer = biommap::fastq::File2Block, record_producer = biommap::fastq::Block2Record)]
+        fn parser(&mut self, record: biommap::fastq::Record, counter: &mut [u64; 4]) {
+            for nuc in record.sequence() {
+                counter[((nuc >> 1) & 0b11) as usize] += 1
+            }
+        }
+
+        let mut parser = CountNuc::new();
+        let mut counter = [0; 4];
+
+        parser.parse(temp.path(), &mut counter)?;
+
+        assert_eq!([727, 729, 792, 752], counter);
+
+        Ok(())
+    }
+
+    #[cfg(all(feature = "derive", feature = "parallel"))]
+    #[test]
+    fn shared_state() -> error::Result<()> {
+        use crate as biommap;
+
+        let temp = tempfile::NamedTempFile::new()?;
+        let mut rng = crate::tests::generator::rng();
+
+        biommap::tests::io::write_fastq(&mut rng, 150, 20, temp.path())?;
+
+        #[biommap::derive::sharedstate_parser(name = CountNuc, data_type = [std::sync::atomic::AtomicU64; 4], block_producer = biommap::fastq::File2Block, record_producer = biommap::fastq::Block2Record)]
+        fn parser(record: biommap::fastq::Record, counter: &[std::sync::atomic::AtomicU64; 4]) {
+            for nuc in record.sequence() {
+                counter[((nuc >> 1) & 0b11) as usize]
+                    .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            }
+        }
+
+        let mut parser = CountNuc::new();
+        let counter = [
+            std::sync::atomic::AtomicU64::new(0),
+            std::sync::atomic::AtomicU64::new(0),
+            std::sync::atomic::AtomicU64::new(0),
+            std::sync::atomic::AtomicU64::new(0),
+        ];
+
+        parser.parse(temp.path(), &counter)?;
+
+        assert_eq!(
+            [727, 729, 792, 752],
+            biommap::tests::transmute::<std::sync::atomic::AtomicU64, u64>(&counter)
+        );
 
         Ok(())
     }
